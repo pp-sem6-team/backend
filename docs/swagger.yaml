@@ -1,0 +1,19 @@
+info:
+  contact: {}
+paths:
+  /health:
+    get:
+      description: Returns OK if service is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check service health
+      tags:
+      - health
+swagger: "2.0"
