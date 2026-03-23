@@ -8,8 +8,8 @@ import (
 	"github.com/pp-sem6-team/backend/internal/domain"
 )
 
-type SkinTypeIngredient interface {
+type SkinTypeIngredientRepository interface {
 	Add(ctx context.Context, skinType domain.SkinType, ingredientID uuid.UUID) error
 	Delete(ctx context.Context, skinType domain.SkinType, ingredientID uuid.UUID) error
-	ListBySkinType(ctx context.Context, skinType domain.SkinType) ([]*models.SkinTypeIngredient, error)
+	ListBySkinType(ctx context.Context, skinType domain.SkinType, offset int, limit int) ([]*models.SkinTypeIngredient, error)
 }
