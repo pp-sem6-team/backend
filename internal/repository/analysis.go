@@ -11,7 +11,7 @@ type AnalysisRepository interface {
 	Create(ctx context.Context, analysis *models.Analysis) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Analysis, error)
 	GetByPhotoID(ctx context.Context, photoID uuid.UUID) (*models.Analysis, error)
-	ListByUserID(ctx context.Context, userID uuid.UUID, offset int, limit int) ([]*models.Analysis, error)
+	ListByUserID(ctx context.Context, userID uuid.UUID, offset int, limit int) ([]*models.Analysis, int64, error)
 	Update(ctx context.Context, analysis *models.Analysis) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }

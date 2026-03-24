@@ -11,5 +11,5 @@ import (
 type SkinTypeIngredientRepository interface {
 	Add(ctx context.Context, skinType domain.SkinType, ingredientID uuid.UUID) error
 	Delete(ctx context.Context, skinType domain.SkinType, ingredientID uuid.UUID) error
-	ListBySkinType(ctx context.Context, skinType domain.SkinType, offset int, limit int) ([]*models.SkinTypeIngredient, error)
+	ListBySkinType(ctx context.Context, skinType domain.SkinType, offset int, limit int) ([]*models.SkinTypeIngredient, int64, error)
 }
