@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/pp-sem6-team/backend/internal/db/models"
+	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/domain"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"gorm.io/gorm"
@@ -18,12 +18,12 @@ func NewRecommendationRepository(db *gorm.DB) repository.RecommendationRepositor
 	return &recommendationRepository{db: db}
 }
 
-func (r *recommendationRepository) Create(ctx context.Context, recommendation *models.Recommendation) error {
+func (r *recommendationRepository) Create(ctx context.Context, recommendation *model.Recommendation) error {
 	return r.db.WithContext(ctx).Create(recommendation).Error
 }
 
-func (r *recommendationRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Recommendation, error) {
-	var recommendation models.Recommendation
+func (r *recommendationRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Recommendation, error) {
+	var recommendation model.Recommendation
 	if err := r.db.WithContext(ctx).First(&recommendation, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
@@ -35,10 +35,10 @@ func (r *recommendationRepository) ListBySkinType(
 	skinType domain.SkinType,
 	offset int,
 	limit int,
-) ([]*models.Recommendation, int64, error) {
-	var recommendations []*models.Recommendation
+) ([]*model.Recommendation, int64, error) {
+	var recommendations []*model.Recommendation
 	var total int64
-	db := r.db.WithContext(ctx).Model(&models.Recommendation{}).Where("skin_type = ?", skinType)
+	db := r.db.WithContext(ctx).Model(&model.Recommendation{}).Where("skin_type = ?", skinType)
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -52,10 +52,10 @@ func (r *recommendationRepository) List(
 	ctx context.Context,
 	offset int,
 	limit int,
-) ([]*models.Recommendation, int64, error) {
-	var recommendations []*models.Recommendation
+) ([]*model.Recommendation, int64, error) {
+	var recommendations []*model.Recommendation
 	var total int64
-	db := r.db.WithContext(ctx).Model(&models.Recommendation{})
+	db := r.db.WithContext(ctx).Model(&model.Recommendation{})
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -65,8 +65,8 @@ func (r *recommendationRepository) List(
 	return recommendations, total, nil
 }
 
-func (r *recommendationRepository) Update(ctx context.Context, recommendation *models.Recommendation) error {
-	return r.db.WithContext(ctx).Model(&models.Recommendation{}).
+func (r *recommendationRepository) Update(ctx context.Context, recommendation *model.Recommendation) error {
+	return r.db.WithContext(ctx).Model(&model.Recommendation{}).
 		Where("id = ?", recommendation.ID).Updates(map[string]any{
 		"skin_type":   recommendation.SkinType,
 		"title":       recommendation.Title,
@@ -75,5 +75,5 @@ func (r *recommendationRepository) Update(ctx context.Context, recommendation *m
 }
 
 func (r *recommendationRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.db.WithContext(ctx).Delete(&models.Recommendation{}, "id = ?", id).Error
+	return r.db.WithContext(ctx).Delete(&model.Recommendation{}, "id = ?", id).Error
 }
