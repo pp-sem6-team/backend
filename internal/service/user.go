@@ -7,7 +7,7 @@ import (
 	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/domain"
 	"github.com/pp-sem6-team/backend/internal/repository"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/pp-sem6-team/backend/internal/security"
 )
 
 type UserService struct {
@@ -49,7 +49,7 @@ func (s *UserService) UpdateMe(ctx context.Context, userID uuid.UUID, input doma
 }
 
 func (s *UserService) UpdatePassword(ctx context.Context, userID uuid.UUID, password string) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hash, err := security.HashPassword(password)
 	if err != nil {
 		return err
 	}
