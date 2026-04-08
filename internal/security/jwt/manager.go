@@ -7,21 +7,21 @@ import (
 	"github.com/google/uuid"
 )
 
-type JWTManager struct {
+type Manager struct {
 	secretKey       []byte
 	accessTokenTTL  time.Duration
 	refreshTokenTTL time.Duration
 }
 
-func NewJWTManager(secret string, accessTTL, refreshTTL time.Duration) *JWTManager {
-	return &JWTManager{
+func NewManager(secret string, accessTTL, refreshTTL time.Duration) *Manager {
+	return &Manager{
 		secretKey:       []byte(secret),
 		accessTokenTTL:  accessTTL,
 		refreshTokenTTL: refreshTTL,
 	}
 }
 
-func (m *JWTManager) GenerateAccessToken(userID uuid.UUID) (string, error) {
+func (m *Manager) GenerateAccessToken(userID uuid.UUID) (string, error) {
 	claims := Claims{
 		UserID: userID.String(),
 		Type:   TokenTypeAccess,
@@ -35,7 +35,7 @@ func (m *JWTManager) GenerateAccessToken(userID uuid.UUID) (string, error) {
 	return token.SignedString(m.secretKey)
 }
 
-func (m *JWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
+func (m *Manager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
 	claims := Claims{
 		UserID: userID.String(),
 		Type:   TokenTypeRefresh,
@@ -49,7 +49,7 @@ func (m *JWTManager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
 	return token.SignedString(m.secretKey)
 }
 
-func (m *JWTManager) ParseToken(tokenStr string) (uuid.UUID, string, error) {
+func (m *Manager) ParseToken(tokenStr string) (uuid.UUID, string, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (any, error) {
