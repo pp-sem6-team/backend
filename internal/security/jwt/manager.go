@@ -21,32 +21,46 @@ func NewManager(secret string, accessTTL, refreshTTL time.Duration) *Manager {
 	}
 }
 
-func (m *Manager) GenerateAccessToken(userID uuid.UUID) (string, error) {
+func (m *Manager) GenerateAccessToken(userID uuid.UUID) (string, time.Time, error) {
+	now := time.Now()
+	expiresAt := now.Add(m.accessTokenTTL)
+
 	claims := Claims{
 		UserID: userID.String(),
 		Type:   TokenTypeAccess,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenTTL)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(now),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(m.secretKey)
+	tokenStr, err := token.SignedString(m.secretKey)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return tokenStr, expiresAt, nil
 }
 
-func (m *Manager) GenerateRefreshToken(userID uuid.UUID) (string, error) {
+func (m *Manager) GenerateRefreshToken(userID uuid.UUID) (string, time.Time, error) {
+	now := time.Now()
+	expiresAt := now.Add(m.refreshTokenTTL)
+
 	claims := Claims{
 		UserID: userID.String(),
 		Type:   TokenTypeRefresh,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshTokenTTL)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(now),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(m.secretKey)
+	tokenStr, err := token.SignedString(m.secretKey)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return tokenStr, expiresAt, nil
 }
 
 func (m *Manager) ParseToken(tokenStr string) (uuid.UUID, string, error) {
