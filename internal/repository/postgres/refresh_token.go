@@ -29,7 +29,7 @@ func (r *refreshTokenRepository) GetByTokenHash(ctx context.Context, tokenHash s
 	return &token, nil
 }
 
-func (r *refreshTokenRepository) DeleteByID(ctx context.Context, id uuid.UUID) error {
+func (r *refreshTokenRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&model.RefreshToken{}, "id = ?", id).Error
 }
 

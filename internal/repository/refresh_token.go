@@ -10,7 +10,7 @@ import (
 type RefreshTokenRepository interface {
 	Create(ctx context.Context, token *model.RefreshToken) error
 	GetByTokenHash(ctx context.Context, tokenHash string) (*model.RefreshToken, error)
-	DeleteByID(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteExpired(ctx context.Context) error
 }
