@@ -37,7 +37,7 @@ func (m *Manager) GenerateAccessToken(userID uuid.UUID) (string, time.Time, erro
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, err := token.SignedString(m.secretKey)
 	if err != nil {
-		return "", time.Time{}, err
+		return "", time.Time{}, ErrTokenGenerationFailed
 	}
 	return tokenStr, expiresAt, nil
 }
@@ -58,7 +58,7 @@ func (m *Manager) GenerateRefreshToken(userID uuid.UUID) (string, time.Time, err
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, err := token.SignedString(m.secretKey)
 	if err != nil {
-		return "", time.Time{}, err
+		return "", time.Time{}, ErrTokenGenerationFailed
 	}
 	return tokenStr, expiresAt, nil
 }
