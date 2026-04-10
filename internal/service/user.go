@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/domain"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"github.com/pp-sem6-team/backend/internal/security"
@@ -18,12 +17,24 @@ func NewUserService(repo repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-// TODO: заменить model.User на DTO
-func (s *UserService) GetMe(ctx context.Context, userID uuid.UUID) (*model.User, error) {
-	return s.repo.GetByID(ctx, userID)
+func (s *UserService) GetByID(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.User{
+		ID:        user.ID,
+		Email:     user.Email,
+		Name:      user.Name,
+		BirthDate: user.BirthDate,
+		Gender:    user.Gender,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
 }
 
-func (s *UserService) UpdateMe(ctx context.Context, userID uuid.UUID, input domain.UpdateUserInput) error {
+func (s *UserService) Update(ctx context.Context, userID uuid.UUID, input domain.UpdateUserInput) error {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return err
@@ -57,6 +68,6 @@ func (s *UserService) UpdatePassword(ctx context.Context, userID uuid.UUID, pass
 	return s.repo.UpdatePassword(ctx, userID, string(hash))
 }
 
-func (s *UserService) DeleteMe(ctx context.Context, userID uuid.UUID) error {
+func (s *UserService) Delete(ctx context.Context, userID uuid.UUID) error {
 	return s.repo.Delete(ctx, userID)
 }
