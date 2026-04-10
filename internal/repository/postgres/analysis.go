@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pp-sem6-team/backend/internal/db/model"
+	"github.com/pp-sem6-team/backend/internal/domain"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"gorm.io/gorm"
 )
@@ -58,6 +59,10 @@ func (r *analysisRepository) Update(ctx context.Context, analysis *model.Analysi
 		"skin_type":     analysis.SkinType,
 		"analysis_data": analysis.AnalysisData,
 	}).Error
+}
+
+func (r *analysisRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status domain.AnalysisStatus) error {
+	return r.db.WithContext(ctx).Model(&model.Analysis{}).Where("id = ?", id).Update("status", status).Error
 }
 
 func (r *analysisRepository) Delete(ctx context.Context, id uuid.UUID) error {
