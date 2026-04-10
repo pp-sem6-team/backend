@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/pp-sem6-team/backend/internal/db/models"
+	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"gorm.io/gorm"
 )
@@ -17,30 +17,30 @@ func NewIngredientRepository(db *gorm.DB) repository.IngredientRepository {
 	return &ingredientRepository{db: db}
 }
 
-func (r *ingredientRepository) Create(ctx context.Context, ingredient *models.Ingredient) error {
+func (r *ingredientRepository) Create(ctx context.Context, ingredient *model.Ingredient) error {
 	return r.db.WithContext(ctx).Create(ingredient).Error
 }
 
-func (r *ingredientRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Ingredient, error) {
-	var ingredient models.Ingredient
+func (r *ingredientRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Ingredient, error) {
+	var ingredient model.Ingredient
 	if err := r.db.WithContext(ctx).First(&ingredient, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &ingredient, nil
 }
 
-func (r *ingredientRepository) GetByName(ctx context.Context, name string) (*models.Ingredient, error) {
-	var ingredient models.Ingredient
+func (r *ingredientRepository) GetByName(ctx context.Context, name string) (*model.Ingredient, error) {
+	var ingredient model.Ingredient
 	if err := r.db.WithContext(ctx).First(&ingredient, "name = ?", name).Error; err != nil {
 		return nil, err
 	}
 	return &ingredient, nil
 }
 
-func (r *ingredientRepository) List(ctx context.Context, offset int, limit int) ([]*models.Ingredient, int64, error) {
-	var ingredients []*models.Ingredient
+func (r *ingredientRepository) List(ctx context.Context, offset int, limit int) ([]*model.Ingredient, int64, error) {
+	var ingredients []*model.Ingredient
 	var total int64
-	db := r.db.WithContext(ctx).Model(&models.Ingredient{})
+	db := r.db.WithContext(ctx).Model(&model.Ingredient{})
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -50,8 +50,8 @@ func (r *ingredientRepository) List(ctx context.Context, offset int, limit int) 
 	return ingredients, total, nil
 }
 
-func (r *ingredientRepository) Update(ctx context.Context, ingredient *models.Ingredient) error {
-	return r.db.WithContext(ctx).Model(&models.Ingredient{}).
+func (r *ingredientRepository) Update(ctx context.Context, ingredient *model.Ingredient) error {
+	return r.db.WithContext(ctx).Model(&model.Ingredient{}).
 		Where("id = ?", ingredient.ID).Updates(map[string]any{
 		"name":        ingredient.Name,
 		"description": ingredient.Description,
@@ -59,5 +59,5 @@ func (r *ingredientRepository) Update(ctx context.Context, ingredient *models.In
 }
 
 func (r *ingredientRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.db.WithContext(ctx).Delete(&models.Ingredient{}, "id = ?", id).Error
+	return r.db.WithContext(ctx).Delete(&model.Ingredient{}, "id = ?", id).Error
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/pp-sem6-team/backend/internal/db/models"
+	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"gorm.io/gorm"
 )
@@ -17,22 +17,22 @@ func NewPhotoRepository(db *gorm.DB) repository.PhotoRepository {
 	return &photoRepository{db: db}
 }
 
-func (r *photoRepository) Create(ctx context.Context, photo *models.Photo) error {
+func (r *photoRepository) Create(ctx context.Context, photo *model.Photo) error {
 	return r.db.WithContext(ctx).Create(photo).Error
 }
 
-func (r *photoRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Photo, error) {
-	var photo models.Photo
+func (r *photoRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Photo, error) {
+	var photo model.Photo
 	if err := r.db.WithContext(ctx).First(&photo, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &photo, nil
 }
 
-func (r *photoRepository) ListByUserID(ctx context.Context, userID uuid.UUID, offset int, limit int) ([]*models.Photo, int64, error) {
-	var photos []*models.Photo
+func (r *photoRepository) ListByUserID(ctx context.Context, userID uuid.UUID, offset int, limit int) ([]*model.Photo, int64, error) {
+	var photos []*model.Photo
 	var total int64
-	db := r.db.WithContext(ctx).Model(&models.Photo{}).Where("user_id = ?", userID)
+	db := r.db.WithContext(ctx).Model(&model.Photo{}).Where("user_id = ?", userID)
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -43,5 +43,5 @@ func (r *photoRepository) ListByUserID(ctx context.Context, userID uuid.UUID, of
 }
 
 func (r *photoRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.db.WithContext(ctx).Delete(&models.Photo{}, "id = ?", id).Error
+	return r.db.WithContext(ctx).Delete(&model.Photo{}, "id = ?", id).Error
 }

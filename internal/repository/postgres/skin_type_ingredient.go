@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/pp-sem6-team/backend/internal/db/models"
+	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/domain"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"gorm.io/gorm"
@@ -24,7 +24,7 @@ func (r *skinTypeIngredientRepository) Add(
 	ingredientID uuid.UUID,
 ) error {
 	return r.db.WithContext(ctx).
-		Create(&models.SkinTypeIngredient{SkinType: skinType, IngredientID: ingredientID}).Error
+		Create(&model.SkinTypeIngredient{SkinType: skinType, IngredientID: ingredientID}).Error
 }
 
 func (r *skinTypeIngredientRepository) Delete(
@@ -33,7 +33,7 @@ func (r *skinTypeIngredientRepository) Delete(
 	ingredientID uuid.UUID,
 ) error {
 	return r.db.WithContext(ctx).
-		Delete(&models.SkinTypeIngredient{}, "skin_type = ? AND ingredient_id = ?", skinType, ingredientID).Error
+		Delete(&model.SkinTypeIngredient{}, "skin_type = ? AND ingredient_id = ?", skinType, ingredientID).Error
 }
 
 func (r *skinTypeIngredientRepository) ListBySkinType(
@@ -41,10 +41,10 @@ func (r *skinTypeIngredientRepository) ListBySkinType(
 	skinType domain.SkinType,
 	offset int,
 	limit int,
-) ([]*models.SkinTypeIngredient, int64, error) {
-	var skinTypeIngredients []*models.SkinTypeIngredient
+) ([]*model.SkinTypeIngredient, int64, error) {
+	var skinTypeIngredients []*model.SkinTypeIngredient
 	var total int64
-	db := r.db.WithContext(ctx).Model(&models.SkinTypeIngredient{}).Where("skin_type = ?", skinType)
+	db := r.db.WithContext(ctx).Model(&model.SkinTypeIngredient{}).Where("skin_type = ?", skinType)
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
