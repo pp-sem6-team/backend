@@ -1,8 +1,11 @@
 package ml
 
-import "github.com/pp-sem6-team/backend/internal/domain"
+import (
+	"github.com/pp-sem6-team/backend/internal/domain"
+	"gorm.io/datatypes"
+)
 
 type Result struct {
 	SkinType domain.SkinType `json:"skin_type"`
-	Data     map[string]any  `json:"analysis_data"`
+	Data     datatypes.JSON  `json:"analysis_data"`
 }
