@@ -2,13 +2,17 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/domain"
 	"github.com/pp-sem6-team/backend/internal/integration/ml"
+	"github.com/pp-sem6-team/backend/internal/integration/storage"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"gorm.io/datatypes"
 )
@@ -20,6 +24,8 @@ type AnalysisService struct {
 	skinTypeIngredientRepo repository.SkinTypeIngredientRepository
 	ingredientRepo         repository.IngredientRepository
 	mlClient               ml.Client
+	storage                storage.Storage
+	presignTTL             time.Duration
 }
 
 func NewAnalysisService(
@@ -29,6 +35,8 @@ func NewAnalysisService(
 	skinTypeIngredientRepo repository.SkinTypeIngredientRepository,
 	ingredientRepo repository.IngredientRepository,
 	mlClient ml.Client,
+	storage storage.Storage,
+	presignTTL time.Duration,
 ) *AnalysisService {
 	return &AnalysisService{
 		photoRepo:              photoRepo,
@@ -37,6 +45,8 @@ func NewAnalysisService(
 		skinTypeIngredientRepo: skinTypeIngredientRepo,
 		ingredientRepo:         ingredientRepo,
 		mlClient:               mlClient,
+		storage:                storage,
+		presignTTL:             presignTTL,
 	}
 }
 
@@ -48,8 +58,24 @@ func (s *AnalysisService) Create(
 	fileName string,
 ) (*domain.AnalysisCreated, error) {
 
-	// TODO: заменить на получение objectKey из minio
-	objectKey := "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890"
+	ext := strings.ToLower(filepath.Ext(fileName))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+		return nil, domain.ErrInvalidFileType
+	}
+
+	objectKey := fmt.Sprintf("users/%s/photos/%s%s", userID, uuid.New().String(), ext)
+
+	err := s.storage.Upload(
+		ctx,
+		objectKey,
+		content,
+		size,
+		"image/jpeg",
+	)
+
+	if err != nil {
+		return nil, err
+	}
 
 	photo := &model.Photo{
 		ID:        uuid.New(),
@@ -91,11 +117,15 @@ func (s *AnalysisService) Create(
 		})
 	}(ctx, analysis.ID, photo.ID, objectKey)
 
-	// TODO: заменить objectKey на FileURL
+	url, err := s.storage.GetPresignedURL(ctx, objectKey, s.presignTTL)
+	if err != nil {
+		return nil, err
+	}
+
 	return &domain.AnalysisCreated{
 		ID:         analysis.ID,
 		PhotoID:    photo.ID,
-		FileURL:    objectKey,
+		FileURL:    url,
 		Status:     analysis.Status,
 		UploadedAt: photo.UploadedAt,
 	}, nil
@@ -122,10 +152,15 @@ func (s *AnalysisService) ListByUserID(
 			return nil, err
 		}
 
+		url, err := s.storage.GetPresignedURL(ctx, photo.ObjectKey, s.presignTTL)
+		if err != nil {
+			return nil, err
+		}
+
 		item := &domain.AnalysisListItem{
 			ID:        a.ID,
 			PhotoID:   a.PhotoID,
-			FileURL:   photo.ObjectKey, // TODO: заменить ObjectKey на FileURL
+			FileURL:   url,
 			Status:    a.Status,
 			SkinType:  a.SkinType,
 			CreatedAt: a.CreatedAt,
@@ -158,10 +193,15 @@ func (s *AnalysisService) GetByID(
 		return nil, domain.ErrForbidden
 	}
 
+	url, err := s.storage.GetPresignedURL(ctx, photo.ObjectKey, s.presignTTL)
+	if err != nil {
+		return nil, err
+	}
+
 	response := &domain.AnalysisDetail{
 		ID:           analysis.ID,
 		PhotoID:      analysis.PhotoID,
-		FileURL:      photo.ObjectKey,
+		FileURL:      url,
 		Status:       analysis.Status,
 		SkinType:     analysis.SkinType,
 		AnalysisData: analysis.AnalysisData,
@@ -230,7 +270,9 @@ func (s *AnalysisService) Delete(
 		return domain.ErrForbidden
 	}
 
-	// TODO: удалить файл из MinIO по photo.ObjectKey
+	if err := s.storage.Delete(ctx, photo.ObjectKey); err != nil {
+		return err
+	}
 
 	if err := s.analysisRepo.Delete(ctx, analysisID); err != nil {
 		return err
