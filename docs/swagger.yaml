@@ -1,3 +1,9 @@
+definitions:
+  dto.HealthResponse:
+    properties:
+      status:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -10,10 +16,25 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.HealthResponse'
       summary: Check service health
+      tags:
+      - health
+  /health/db:
+    get:
+      description: Returns OK if db is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+      summary: Check db health
       tags:
       - health
 swagger: "2.0"
