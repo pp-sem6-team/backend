@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	Postgres PostgresConfig
+	Minio    MinioConfig
 }
 
 type PostgresConfig struct {
@@ -24,6 +25,14 @@ type PostgresConfig struct {
 	ConnMaxLifetime time.Duration
 }
 
+type MinioConfig struct {
+	Endpoint     string
+	RootUser     string
+	RootPassword string
+	Bucket       string
+	UseSSL       bool
+}
+
 func Load() *Config {
 	return &Config{
 		Postgres: PostgresConfig{
@@ -38,6 +47,13 @@ func Load() *Config {
 			MaxOpenConns:    getEnvInt("POSTGRES_MAX_OPEN_CONNS"),
 			MaxIdleConns:    getEnvInt("POSTGRES_MAX_IDLE_CONNS"),
 			ConnMaxLifetime: time.Duration(getEnvInt("POSTGRES_CONN_MAX_LIFETIME_MINUTES")) * time.Minute,
+		},
+		Minio: MinioConfig{
+			Endpoint:     getEnv("MINIO_ENDPOINT"),
+			RootUser:     getEnv("MINIO_ROOT_USER"),
+			RootPassword: getEnv("MINIO_ROOT_PASSWORD"),
+			Bucket:       getEnv("MINIO_BUCKET"),
+			UseSSL:       getEnvBool("MINIO_USE_SSL"),
 		},
 	}
 }
@@ -59,6 +75,20 @@ func getEnvInt(key string) int {
 	v, err := strconv.Atoi(value)
 	if err != nil {
 		panic("invalid int value for env " + key)
+	}
+
+	return v
+}
+
+func getEnvBool(key string) bool {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		panic("env variable not set: " + key)
+	}
+
+	v, err := strconv.ParseBool(value)
+	if err != nil {
+		panic("invalid bool value for env " + key)
 	}
 
 	return v

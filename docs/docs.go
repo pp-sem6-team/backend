@@ -60,6 +60,32 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/health/storage": {
+            "get": {
+                "description": "Returns OK if storage is running",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Check storage health",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HealthResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HealthResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

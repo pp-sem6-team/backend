@@ -37,4 +37,21 @@ paths:
       summary: Check db health
       tags:
       - health
+  /health/storage:
+    get:
+      description: Returns OK if storage is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+      summary: Check storage health
+      tags:
+      - health
 swagger: "2.0"

@@ -9,6 +9,7 @@ import (
 	"github.com/pp-sem6-team/backend/internal/config"
 	"github.com/pp-sem6-team/backend/internal/db"
 	"github.com/pp-sem6-team/backend/internal/handlers"
+	"github.com/pp-sem6-team/backend/internal/integration/storage/minio"
 
 	_ "github.com/pp-sem6-team/backend/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -28,12 +29,18 @@ func main() {
 		log.Fatal(err)
 	}
 
+	storage, err := minio.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	r := gin.Default()
 
-	healthHandler := handlers.NewHealthHandler(database)
+	healthHandler := handlers.NewHealthHandler(database, storage)
 
 	r.GET("/health", healthHandler.Health)
 	r.GET("/health/db", healthHandler.DBHealth)
+	r.GET("/health/storage", healthHandler.StorageHealth)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

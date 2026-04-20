@@ -5,16 +5,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pp-sem6-team/backend/internal/dto"
+	"github.com/pp-sem6-team/backend/internal/integration/storage"
 	"gorm.io/gorm"
 )
 
 type HealthHandler struct {
-	db *gorm.DB
+	db      *gorm.DB
+	storage storage.Storage
 }
 
-func NewHealthHandler(db *gorm.DB) *HealthHandler {
+func NewHealthHandler(db *gorm.DB, storage storage.Storage) *HealthHandler {
 	return &HealthHandler{
-		db: db,
+		db:      db,
+		storage: storage,
 	}
 }
 
@@ -57,5 +60,27 @@ func (h *HealthHandler) DBHealth(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dto.HealthResponse{
 		Status: "db ok",
+	})
+}
+
+// StorageHealth godoc
+// @Summary      Check storage health
+// @Description  Returns OK if storage is running
+// @Tags         health
+// @Produce      json
+// @Success      200  {object}  dto.HealthResponse
+// @Failure      500  {object}  dto.HealthResponse
+// @Router       /health/storage [get]
+func (h *HealthHandler) StorageHealth(c *gin.Context) {
+	err := h.storage.Health(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.HealthResponse{
+			Status: "storage error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.HealthResponse{
+		Status: "storage ok",
 	})
 }
