@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Postgres PostgresConfig
 	Minio    MinioConfig
+	JWT      JWTConfig
 }
 
 type PostgresConfig struct {
@@ -33,6 +34,12 @@ type MinioConfig struct {
 	UseSSL       bool
 }
 
+type JWTConfig struct {
+	Secret          string
+	AccessTokenTTL  time.Duration
+	RefreshTokenTTL time.Duration
+}
+
 func Load() *Config {
 	return &Config{
 		Postgres: PostgresConfig{
@@ -54,6 +61,11 @@ func Load() *Config {
 			RootPassword: getEnv("MINIO_ROOT_PASSWORD"),
 			Bucket:       getEnv("MINIO_BUCKET"),
 			UseSSL:       getEnvBool("MINIO_USE_SSL"),
+		},
+		JWT: JWTConfig{
+			Secret:          getEnv("JWT_SECRET"),
+			AccessTokenTTL:  time.Duration(getEnvInt("JWT_ACCESS_TTL_SECONDS")) * time.Second,
+			RefreshTokenTTL: time.Duration(getEnvInt("JWT_REFRESH_TTL_DAYS")) * 24 * time.Hour,
 		},
 	}
 }
