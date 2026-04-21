@@ -70,8 +70,9 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	return s.generateTokens(ctx, user.ID)
 }
 
-func (s *AuthService) Logout(ctx context.Context, userID uuid.UUID) error {
-	return s.refreshTokenRepo.DeleteByUserID(ctx, userID)
+func (s *AuthService) Logout(ctx context.Context, userID uuid.UUID, refreshToken string) error {
+	hash := security.HashToken(refreshToken)
+	return s.refreshTokenRepo.DeleteByUserIDAndToken(ctx, userID, hash)
 }
 
 func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (string, string, error) {
