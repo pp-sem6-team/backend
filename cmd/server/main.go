@@ -3,48 +3,21 @@ package main
 import (
 	"log"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-
-	"github.com/pp-sem6-team/backend/internal/config"
-	"github.com/pp-sem6-team/backend/internal/db"
-	"github.com/pp-sem6-team/backend/internal/handlers"
-	"github.com/pp-sem6-team/backend/internal/integration/storage/minio"
-
-	_ "github.com/pp-sem6-team/backend/docs"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/pp-sem6-team/backend/internal/app"
 )
 
+/**
+@title           Backend API
+@version         1.0
+
+@securityDefinitions.apikey BearerAuth
+@in header
+@name Authorization
+@description Enter token as: Bearer <your_token>
+*/
+
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println(".env file not found, using system env")
-	}
-
-	cfg := config.Load()
-
-	database, err := db.NewPostgres(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	storage, err := minio.New(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	r := gin.Default()
-
-	healthHandler := handlers.NewHealthHandler(database, storage)
-
-	r.GET("/health", healthHandler.Health)
-	r.GET("/health/db", healthHandler.DBHealth)
-	r.GET("/health/storage", healthHandler.StorageHealth)
-
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	if err := r.Run(":8080"); err != nil {
+	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
