@@ -22,7 +22,17 @@ func setupRouter(deps *Dependencies) *gin.Engine {
 
 	auth := r.Group("/auth")
 	auth.Use(deps.AuthMiddleware)
+
 	auth.POST("/logout", deps.AuthHandler.Logout)
+
+	user := r.Group("/users")
+	user.Use(deps.AuthMiddleware)
+	{
+		user.GET("/me", deps.UserHandler.GetMe)
+		user.PATCH("/me", deps.UserHandler.UpdateMe)
+		user.PATCH("/me/password", deps.UserHandler.UpdateMyPassword)
+		user.DELETE("/me", deps.UserHandler.DeleteMe)
+	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

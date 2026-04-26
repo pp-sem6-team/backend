@@ -81,6 +81,50 @@ definitions:
     - name
     - password
     type: object
+  dto.UserPasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  dto.UserRequest:
+    properties:
+      birth_date:
+        example: "2000-01-01T00:00:00Z"
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      gender:
+        allOf:
+        - $ref: '#/definitions/domain.Gender'
+        enum:
+        - male
+        - female
+      name:
+        type: string
+    type: object
+  dto.UserResponse:
+    properties:
+      birth_date:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      gender:
+        $ref: '#/definitions/domain.Gender'
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
 info:
   contact: {}
   title: Backend API
@@ -263,6 +307,116 @@ paths:
       summary: Check storage health
       tags:
       - health
+  /users/me:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes authenticated user account
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete current user
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Returns information about the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Updates current user and returns updated user information
+      parameters:
+      - description: User Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update current user
+      tags:
+      - users
+  /users/me/password:
+    patch:
+      consumes:
+      - application/json
+      description: Changes current user password after verifying current password
+      parameters:
+      - description: User Password Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update password
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     description: 'Enter token as: Bearer <your_token>'

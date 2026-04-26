@@ -3,7 +3,7 @@ package app
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pp-sem6-team/backend/internal/config"
-	handlers "github.com/pp-sem6-team/backend/internal/handler"
+	"github.com/pp-sem6-team/backend/internal/handler"
 	"github.com/pp-sem6-team/backend/internal/integration/storage/minio"
 	"github.com/pp-sem6-team/backend/internal/middleware"
 	"github.com/pp-sem6-team/backend/internal/repository/postgres"
@@ -13,8 +13,9 @@ import (
 )
 
 type Dependencies struct {
-	HealthHandler *handlers.HealthHandler
-	AuthHandler   *handlers.AuthHandler
+	HealthHandler *handler.HealthHandler
+	AuthHandler   *handler.AuthHandler
+	UserHandler   *handler.UserHandler
 
 	AuthMiddleware gin.HandlerFunc
 }
@@ -39,9 +40,14 @@ func initDependencies(
 		jwtManager,
 	)
 
+	userService := service.NewUserService(
+		userRepo,
+	)
+
 	return &Dependencies{
-		HealthHandler: handlers.NewHealthHandler(database, storage),
-		AuthHandler:   handlers.NewAuthHandler(authService),
+		HealthHandler: handler.NewHealthHandler(database, storage),
+		AuthHandler:   handler.NewAuthHandler(authService),
+		UserHandler:   handler.NewUserHandler(userService),
 
 		AuthMiddleware: middleware.AuthMiddleware(jwtManager),
 	}
