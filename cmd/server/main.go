@@ -1,21 +1,23 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"log"
 
-	"github.com/pp-sem6-team/backend/internal/handlers"
-
-	_ "github.com/pp-sem6-team/backend/docs"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/pp-sem6-team/backend/internal/app"
 )
 
+/**
+@title           Backend API
+@version         1.0
+
+@securityDefinitions.apikey BearerAuth
+@in header
+@name Authorization
+@description Enter token as: Bearer <your_token>
+*/
+
 func main() {
-	r := gin.Default()
-
-	r.GET("/health", handlers.HealthHandler)
-
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	r.Run(":8080")
+	if err := app.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

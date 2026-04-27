@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/pp-sem6-team/backend/internal/domain"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"github.com/pp-sem6-team/backend/internal/security"
+	"github.com/pp-sem6-team/backend/internal/service/mapper"
 )
 
 type UserService struct {
@@ -23,44 +25,56 @@ func (s *UserService) GetByID(ctx context.Context, userID uuid.UUID) (*domain.Us
 		return nil, err
 	}
 
-	return &domain.User{
-		ID:        user.ID,
-		Email:     user.Email,
-		Name:      user.Name,
-		BirthDate: user.BirthDate,
-		Gender:    user.Gender,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-	}, nil
+	return mapper.ToUserDomain(user), nil
 }
 
-func (s *UserService) Update(ctx context.Context, userID uuid.UUID, input domain.UpdateUserInput) error {
+func (s *UserService) Update(
+	ctx context.Context,
+	userID uuid.UUID,
+	email *string,
+	name *string,
+	birthDate *time.Time,
+	gender *domain.Gender,
+) (*domain.User, error) {
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if email != nil {
+		user.Email = *email
+	}
+
+	if name != nil {
+		user.Name = *name
+	}
+
+	if birthDate != nil {
+		user.BirthDate = birthDate
+	}
+
+	if gender != nil {
+		user.Gender = gender
+	}
+
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return mapper.ToUserDomain(user), nil
+}
+
+func (s *UserService) UpdatePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	if input.Name != nil {
-		user.Name = *input.Name
+	if err := security.CheckPassword(currentPassword, user.PasswordHash); err != nil {
+		return err
 	}
 
-	if input.Email != nil {
-		user.Email = *input.Email
-	}
-
-	if input.BirthDate != nil {
-		user.BirthDate = input.BirthDate
-	}
-
-	if input.Gender != nil {
-		user.Gender = input.Gender
-	}
-
-	return s.repo.Update(ctx, user)
-}
-
-func (s *UserService) UpdatePassword(ctx context.Context, userID uuid.UUID, password string) error {
-	hash, err := security.HashPassword(password)
+	hash, err := security.HashPassword(newPassword)
 	if err != nil {
 		return err
 	}

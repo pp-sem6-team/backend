@@ -33,8 +33,10 @@ func (r *refreshTokenRepository) Delete(ctx context.Context, id uuid.UUID) error
 	return r.db.WithContext(ctx).Delete(&model.RefreshToken{}, "id = ?", id).Error
 }
 
-func (r *refreshTokenRepository) DeleteByUserID(ctx context.Context, userID uuid.UUID) error {
-	return r.db.WithContext(ctx).Delete(&model.RefreshToken{}, "user_id = ?", userID).Error
+func (r *refreshTokenRepository) DeleteByUserIDAndToken(ctx context.Context, userID uuid.UUID, tokenHash string) error {
+	return r.db.WithContext(ctx).
+		Where("user_id = ? AND token_hash = ?", userID, tokenHash).
+		Delete(&model.RefreshToken{}).Error
 }
 
 func (r *refreshTokenRepository) DeleteExpired(ctx context.Context) error {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/pp-sem6-team/backend/internal/config"
 	"github.com/pp-sem6-team/backend/internal/integration/storage"
 )
 
@@ -17,19 +18,44 @@ type Client struct {
 
 var _ storage.Storage = (*Client)(nil)
 
-func New(cfg Config) (*Client, error) {
-	mc, err := minio.New(cfg.Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(cfg.AccessKeyID, cfg.SecretAccessKey, ""),
-		Secure: cfg.UseSSL,
+func New(cfg *config.Config) (*Client, error) {
+	mc, err := minio.New(cfg.Minio.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(cfg.Minio.RootUser, cfg.Minio.RootPassword, ""),
+		Secure: cfg.Minio.UseSSL,
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	exists, err := mc.BucketExists(
+		context.Background(),
+		cfg.Minio.Bucket,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		err = mc.MakeBucket(
+			context.Background(),
+			cfg.Minio.Bucket,
+			minio.MakeBucketOptions{},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Client{
 		client: mc,
-		bucket: cfg.Bucket,
+		bucket: cfg.Minio.Bucket,
 	}, nil
+}
+
+func (c *Client) Health(ctx context.Context) error {
+	_, err := c.client.ListBuckets(ctx)
+	return err
 }
 
 func (c *Client) Upload(
