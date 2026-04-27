@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS refresh_tokens;
 DROP TABLE IF EXISTS skin_type_ingredients;
 DROP TABLE IF EXISTS ingredients;
 DROP TABLE IF EXISTS recommendations;
-DROP TABLE IF EXISTS analysis;
+DROP TABLE IF EXISTS analyses;
 DROP TABLE IF EXISTS photos;
 DROP TABLE IF EXISTS users;
 

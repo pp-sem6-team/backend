@@ -20,7 +20,7 @@ CREATE TABLE photos (
     uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE analysis (
+CREATE TABLE analyses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     photo_id UUID NOT NULL UNIQUE REFERENCES photos(id) ON DELETE CASCADE,
     status analysis_status NOT NULL DEFAULT 'processing',
