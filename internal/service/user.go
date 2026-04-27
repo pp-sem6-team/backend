@@ -25,7 +25,7 @@ func (s *UserService) GetByID(ctx context.Context, userID uuid.UUID) (*domain.Us
 		return nil, err
 	}
 
-	return mapper.ToDomain(user), nil
+	return mapper.ToUserDomain(user), nil
 }
 
 func (s *UserService) Update(
@@ -61,7 +61,7 @@ func (s *UserService) Update(
 		return nil, err
 	}
 
-	return mapper.ToDomain(user), nil
+	return mapper.ToUserDomain(user), nil
 }
 
 func (s *UserService) UpdatePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {

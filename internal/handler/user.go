@@ -49,7 +49,7 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, mapper.ToResponse(user))
+	c.JSON(http.StatusOK, mapper.ToUserResponse(user))
 }
 
 // UpdateMe godoc
@@ -90,7 +90,7 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, mapper.ToResponse(user))
+	c.JSON(http.StatusOK, mapper.ToUserResponse(user))
 }
 
 // UpdateMyPassword godoc
