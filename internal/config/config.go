@@ -32,6 +32,8 @@ type MinioConfig struct {
 	RootPassword string
 	Bucket       string
 	UseSSL       bool
+
+	PresignTTL time.Duration
 }
 
 type JWTConfig struct {
@@ -61,6 +63,8 @@ func Load() *Config {
 			RootPassword: getEnv("MINIO_ROOT_PASSWORD"),
 			Bucket:       getEnv("MINIO_BUCKET"),
 			UseSSL:       getEnvBool("MINIO_USE_SSL"),
+
+			PresignTTL: time.Duration(getEnvInt("MINIO_PRESIGN_TTL_MINUTES")) * time.Minute,
 		},
 		JWT: JWTConfig{
 			Secret:          getEnv("JWT_SECRET"),
