@@ -41,7 +41,10 @@ func (r *analysisRepository) GetByPhotoID(ctx context.Context, photoID uuid.UUID
 func (r *analysisRepository) ListByUserID(ctx context.Context, userID uuid.UUID, offset int, limit int) ([]*model.Analysis, int64, error) {
 	var analyses []*model.Analysis
 	var total int64
-	db := r.db.WithContext(ctx).Model(&model.Analysis{}).Where("user_id = ?", userID)
+	db := r.db.WithContext(ctx).
+		Model(&model.Analysis{}).
+		Joins("JOIN photos ON photos.id = analyses.photo_id").
+		Where("photos.user_id = ?", userID)
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
