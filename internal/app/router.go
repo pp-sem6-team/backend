@@ -34,6 +34,15 @@ func setupRouter(deps *Dependencies) *gin.Engine {
 		user.DELETE("/me", deps.UserHandler.DeleteMe)
 	}
 
+	analysis := r.Group("/analyses")
+	analysis.Use(deps.AuthMiddleware)
+	{
+		analysis.POST("", deps.AnalysisHandler.CreateAnalysis)
+		analysis.GET("", deps.AnalysisHandler.ListAnalyses)
+		analysis.GET("/:id", deps.AnalysisHandler.GetAnalysisByID)
+		analysis.DELETE("/:id", deps.AnalysisHandler.DeleteAnalysis)
+	}
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return r

@@ -1,4 +1,14 @@
 definitions:
+  domain.AnalysisStatus:
+    enum:
+    - processing
+    - completed
+    - failed
+    type: string
+    x-enum-varnames:
+    - Processing
+    - Completed
+    - Failed
   domain.Gender:
     enum:
     - male
@@ -7,6 +17,81 @@ definitions:
     x-enum-varnames:
     - GenderMale
     - GenderFemale
+  domain.Ingredient:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  domain.Recommendation:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  domain.SkinType:
+    enum:
+    - oily
+    - dry
+    - normal
+    - combination
+    type: string
+    x-enum-varnames:
+    - Oily
+    - Dry
+    - Normal
+    - Combination
+  dto.AnalysisDetailResponse:
+    properties:
+      analysis_data:
+        additionalProperties: {}
+        type: object
+      created_at:
+        type: string
+      file_url:
+        type: string
+      id:
+        type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/domain.Ingredient'
+        type: array
+      photo_id:
+        type: string
+      recommendations:
+        items:
+          $ref: '#/definitions/domain.Recommendation'
+        type: array
+      skin_type:
+        $ref: '#/definitions/domain.SkinType'
+      status:
+        $ref: '#/definitions/domain.AnalysisStatus'
+      updated_at:
+        type: string
+    type: object
+  dto.AnalysisListItemResponse:
+    properties:
+      created_at:
+        type: string
+      file_url:
+        type: string
+      id:
+        type: string
+      photo_id:
+        type: string
+      skin_type:
+        $ref: '#/definitions/domain.SkinType'
+      status:
+        $ref: '#/definitions/domain.AnalysisStatus'
+      updated_at:
+        type: string
+    type: object
   dto.AuthResponse:
     properties:
       access_token:
@@ -14,6 +99,19 @@ definitions:
       refresh_token:
         type: string
       token_type:
+        type: string
+    type: object
+  dto.CreateAnalysisResponse:
+    properties:
+      file_url:
+        type: string
+      id:
+        type: string
+      photo_id:
+        type: string
+      status:
+        $ref: '#/definitions/domain.AnalysisStatus'
+      uploaded_at:
         type: string
     type: object
   dto.ErrorResponse:
@@ -130,6 +228,149 @@ info:
   title: Backend API
   version: "1.0"
 paths:
+  /analyses:
+    get:
+      description: Returns paginated list of user analyses
+      parameters:
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.AnalysisListItemResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user analysis history
+      tags:
+      - analyses
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload photo and start skin analysis
+      parameters:
+      - description: Photo to analyze
+        in: formData
+        name: photo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/dto.CreateAnalysisResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create analysis from photo
+      tags:
+      - analyses
+  /analyses/{id}:
+    delete:
+      description: Deletes user analysis by id
+      parameters:
+      - description: Analysis ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete analysis by ID
+      tags:
+      - analyses
+    get:
+      description: Returns detailed analysis result
+      parameters:
+      - description: Analysis ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 10
+        description: Recommendations limit
+        in: query
+        name: recs_limit
+        type: integer
+      - default: 10
+        description: Ingredients limit
+        in: query
+        name: ings_limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AnalysisDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get analysis by ID
+      tags:
+      - analyses
   /auth/login:
     post:
       consumes:
@@ -315,10 +556,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.MessageResponse'
+        "204":
+          description: No Content
         "401":
           description: Unauthorized
           schema:

@@ -6,6 +6,228 @@
         "version": "1.0"
     },
     "paths": {
+        "/analyses": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns paginated list of user analyses",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analyses"
+                ],
+                "summary": "Get user analysis history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.AnalysisListItemResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload photo and start skin analysis",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analyses"
+                ],
+                "summary": "Create analysis from photo",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Photo to analyze",
+                        "name": "photo",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateAnalysisResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/analyses/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns detailed analysis result",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analyses"
+                ],
+                "summary": "Get analysis by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Analysis ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Recommendations limit",
+                        "name": "recs_limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Ingredients limit",
+                        "name": "ings_limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.AnalysisDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes user analysis by id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analyses"
+                ],
+                "summary": "Delete analysis by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Analysis ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Authenticates user and returns access and refresh tokens",
@@ -336,11 +558,8 @@
                 ],
                 "summary": "Delete current user",
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -456,6 +675,19 @@
         }
     },
     "definitions": {
+        "domain.AnalysisStatus": {
+            "type": "string",
+            "enum": [
+                "processing",
+                "completed",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "Processing",
+                "Completed",
+                "Failed"
+            ]
+        },
         "domain.Gender": {
             "type": "string",
             "enum": [
@@ -467,6 +699,117 @@
                 "GenderFemale"
             ]
         },
+        "domain.Ingredient": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Recommendation": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.SkinType": {
+            "type": "string",
+            "enum": [
+                "oily",
+                "dry",
+                "normal",
+                "combination"
+            ],
+            "x-enum-varnames": [
+                "Oily",
+                "Dry",
+                "Normal",
+                "Combination"
+            ]
+        },
+        "dto.AnalysisDetailResponse": {
+            "type": "object",
+            "properties": {
+                "analysis_data": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Ingredient"
+                    }
+                },
+                "photo_id": {
+                    "type": "string"
+                },
+                "recommendations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Recommendation"
+                    }
+                },
+                "skin_type": {
+                    "$ref": "#/definitions/domain.SkinType"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.AnalysisStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.AnalysisListItemResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "photo_id": {
+                    "type": "string"
+                },
+                "skin_type": {
+                    "$ref": "#/definitions/domain.SkinType"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.AnalysisStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.AuthResponse": {
             "type": "object",
             "properties": {
@@ -477,6 +820,26 @@
                     "type": "string"
                 },
                 "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateAnalysisResponse": {
+            "type": "object",
+            "properties": {
+                "file_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "photo_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.AnalysisStatus"
+                },
+                "uploaded_at": {
                     "type": "string"
                 }
             }

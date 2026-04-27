@@ -3,12 +3,12 @@ package app
 func Run() error {
 	cfg := loadConfig()
 
-	database, storage, err := initInfrastructure(cfg)
+	database, storage, mlClient, err := initInfrastructure(cfg)
 	if err != nil {
 		return err
 	}
 
-	deps := initDependencies(cfg, database, storage)
+	deps := initDependencies(cfg, database, storage, mlClient)
 
 	router := setupRouter(deps)
 
