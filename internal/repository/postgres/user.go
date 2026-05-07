@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	dbutil "github.com/pp-sem6-team/backend/internal/db"
 	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"gorm.io/gorm"
@@ -18,24 +19,32 @@ func NewUserRepository(db *gorm.DB) repository.UserRepository {
 }
 
 func (r *userRepository) Create(ctx context.Context, user *model.User) error {
-	return r.db.WithContext(ctx).Create(user).Error
+	return dbutil.MapError(
+		r.db.WithContext(ctx).Create(user).Error,
+	)
 }
 
 func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	var user model.User
-	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
-	if err != nil {
+
+	if err := dbutil.MapError(
+		r.db.WithContext(ctx).First(&user, "id = ?", id).Error,
+	); err != nil {
 		return nil, err
 	}
+
 	return &user, nil
 }
 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
-	err := r.db.WithContext(ctx).First(&user, "email = ?", email).Error
-	if err != nil {
+
+	if err := dbutil.MapError(
+		r.db.WithContext(ctx).First(&user, "email = ?", email).Error,
+	); err != nil {
 		return nil, err
 	}
+
 	return &user, nil
 }
 
@@ -45,11 +54,16 @@ func (r *userRepository) List(ctx context.Context, offset int, limit int) ([]*mo
 
 	db := r.db.WithContext(ctx).Model(&model.User{})
 
-	if err := db.Count(&total).Error; err != nil {
+	if err := dbutil.MapError(db.Count(&total).Error); err != nil {
 		return nil, 0, err
 	}
 
-	if err := db.Order("created_at ASC, id ASC").Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+	if err := dbutil.MapError(
+		db.Order("created_at ASC, id ASC").
+			Offset(offset).
+			Limit(limit).
+			Find(&users).Error,
+	); err != nil {
 		return nil, 0, err
 	}
 
@@ -57,22 +71,31 @@ func (r *userRepository) List(ctx context.Context, offset int, limit int) ([]*mo
 }
 
 func (r *userRepository) Update(ctx context.Context, user *model.User) error {
-	return r.db.WithContext(ctx).Model(&model.User{}).
-		Where("id = ?", user.ID).
-		Updates(map[string]any{
-			"email":      user.Email,
-			"name":       user.Name,
-			"birth_date": user.BirthDate,
-			"gender":     user.Gender,
-		}).Error
+	return dbutil.MapError(
+		r.db.WithContext(ctx).
+			Model(&model.User{}).
+			Where("id = ?", user.ID).
+			Updates(map[string]any{
+				"email":      user.Email,
+				"name":       user.Name,
+				"birth_date": user.BirthDate,
+				"gender":     user.Gender,
+			}).Error,
+	)
 }
 
 func (r *userRepository) UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) error {
-	return r.db.WithContext(ctx).Model(&model.User{}).
-		Where("id = ?", id).
-		Update("password_hash", passwordHash).Error
+	return dbutil.MapError(
+		r.db.WithContext(ctx).
+			Model(&model.User{}).
+			Where("id = ?", id).
+			Update("password_hash", passwordHash).Error,
+	)
 }
 
 func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.db.WithContext(ctx).Delete(&model.User{}, "id = ?", id).Error
+	return dbutil.MapError(
+		r.db.WithContext(ctx).
+			Delete(&model.User{}, "id = ?", id).Error,
+	)
 }
