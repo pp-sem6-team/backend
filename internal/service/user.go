@@ -71,7 +71,7 @@ func (s *UserService) UpdatePassword(ctx context.Context, userID uuid.UUID, curr
 	}
 
 	if err := security.CheckPassword(currentPassword, user.PasswordHash); err != nil {
-		return err
+		return domain.ErrInvalidCreds
 	}
 
 	hash, err := security.HashPassword(newPassword)
