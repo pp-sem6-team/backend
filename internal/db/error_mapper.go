@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/jackc/pgconn"
-	"github.com/pp-sem6-team/backend/internal/apperrors"
 	"gorm.io/gorm"
 )
 
@@ -17,19 +16,19 @@ func MapError(err error) error {
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return apperrors.ErrNotFound
+		return ErrNotFound
 	}
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		if pgErr.Code == pgUniqueViolation {
-			return apperrors.ErrAlreadyExists
+			return ErrAlreadyExists
 		}
 	}
 
 	if strings.Contains(err.Error(), "duplicate key") {
-		return apperrors.ErrAlreadyExists
+		return ErrAlreadyExists
 	}
 
-	return apperrors.ErrInternal
+	return ErrInternal
 }
