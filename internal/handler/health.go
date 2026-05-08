@@ -40,19 +40,19 @@ func (h *HealthHandler) Health(c *gin.Context) {
 // @Tags         health
 // @Produce      json
 // @Success      200  {object}  dto.HealthResponse
-// @Failure      500  {object}  dto.HealthResponse
+// @Failure      503  {object}  dto.HealthResponse
 // @Router       /health/db [get]
 func (h *HealthHandler) DBHealth(c *gin.Context) {
 	sqlDB, err := h.db.DB()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.HealthResponse{
+		c.JSON(http.StatusServiceUnavailable, dto.HealthResponse{
 			Status: "db error",
 		})
 		return
 	}
 
 	if err := sqlDB.Ping(); err != nil {
-		c.JSON(http.StatusInternalServerError, dto.HealthResponse{
+		c.JSON(http.StatusServiceUnavailable, dto.HealthResponse{
 			Status: "db down",
 		})
 		return
@@ -69,12 +69,12 @@ func (h *HealthHandler) DBHealth(c *gin.Context) {
 // @Tags         health
 // @Produce      json
 // @Success      200  {object}  dto.HealthResponse
-// @Failure      500  {object}  dto.HealthResponse
+// @Failure      503  {object}  dto.HealthResponse
 // @Router       /health/storage [get]
 func (h *HealthHandler) StorageHealth(c *gin.Context) {
 	err := h.storage.Health(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.HealthResponse{
+		c.JSON(http.StatusServiceUnavailable, dto.HealthResponse{
 			Status: "storage error",
 		})
 		return

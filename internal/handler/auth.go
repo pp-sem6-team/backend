@@ -29,6 +29,7 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 // @Param        body  body     dto.RegisterRequest  true  "Register request"
 // @Success      201  {object}  dto.AuthResponse
 // @Failure      400  {object}  dto.ErrorResponse
+// @Failure      409  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -37,6 +38,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid request body: " + err.Error(),
+			Code:    "INVALID_REQUEST",
 		})
 		return
 	}
@@ -50,9 +52,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		req.Gender,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -72,6 +72,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // @Param        body body      dto.LoginRequest true "Login request"
 // @Success      200  {object}  dto.AuthResponse
 // @Failure      400  {object}  dto.ErrorResponse
+// @Failure      401  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -80,6 +82,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid request body: " + err.Error(),
+			Code:    "INVALID_REQUEST",
 		})
 		return
 	}
@@ -90,9 +93,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		req.Password,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -122,13 +123,17 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid request body: " + err.Error(),
+			Code:    "INVALID_REQUEST",
 		})
 		return
 	}
 
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
@@ -136,9 +141,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	err := h.authService.Logout(c.Request.Context(), userID, req.RefreshToken)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -157,6 +160,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Success      200  {object}  dto.AuthResponse
 // @Failure      400  {object}  dto.ErrorResponse
 // @Failure      401  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
@@ -165,6 +169,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid request body: " + err.Error(),
+			Code:    "INVALID_REQUEST",
 		})
 		return
 	}
@@ -174,9 +179,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		req.RefreshToken,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 

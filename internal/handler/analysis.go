@@ -30,6 +30,7 @@ func NewAnalysisHandler(analysisService *service.AnalysisService) *AnalysisHandl
 // @Security     BearerAuth
 // @Param        photo formData file true "Photo to analyze"
 // @Success      202  {object}  dto.CreateAnalysisResponse
+// @Failure      400  {object}  dto.ErrorResponse
 // @Failure      401  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /analyses [post]
@@ -38,6 +39,7 @@ func (h *AnalysisHandler) CreateAnalysis(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid request body: " + err.Error(),
+			Code:    "INVALID_REQUEST",
 		})
 		return
 	}
@@ -45,7 +47,8 @@ func (h *AnalysisHandler) CreateAnalysis(c *gin.Context) {
 	src, err := file.Open()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
+			Message: "failed to open file",
+			Code:    "FILE_OPEN_FAILED",
 		})
 		return
 	}
@@ -53,7 +56,10 @@ func (h *AnalysisHandler) CreateAnalysis(c *gin.Context) {
 
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
@@ -61,9 +67,7 @@ func (h *AnalysisHandler) CreateAnalysis(c *gin.Context) {
 
 	analysis, err := h.analysisService.Create(c.Request.Context(), userID, src, file.Size, file.Filename)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -91,6 +95,7 @@ func (h *AnalysisHandler) ListAnalyses(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid offset",
+			Code:    "INVALID_OFFSET",
 		})
 		return
 	}
@@ -99,6 +104,7 @@ func (h *AnalysisHandler) ListAnalyses(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid limit",
+			Code:    "INVALID_LIMIT",
 		})
 		return
 	}
@@ -113,7 +119,10 @@ func (h *AnalysisHandler) ListAnalyses(c *gin.Context) {
 
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
@@ -126,9 +135,7 @@ func (h *AnalysisHandler) ListAnalyses(c *gin.Context) {
 		limit,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -147,6 +154,8 @@ func (h *AnalysisHandler) ListAnalyses(c *gin.Context) {
 // @Success      200  {object}   dto.AnalysisDetailResponse
 // @Failure      400  {object}  dto.ErrorResponse
 // @Failure      401  {object}  dto.ErrorResponse
+// @Failure      403  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router /analyses/{id} [get]
 func (h *AnalysisHandler) GetAnalysisByID(c *gin.Context) {
@@ -159,6 +168,7 @@ func (h *AnalysisHandler) GetAnalysisByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid id",
+			Code:    "INVALID_ID",
 		})
 		return
 	}
@@ -167,6 +177,7 @@ func (h *AnalysisHandler) GetAnalysisByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid recs_limit",
+			Code:    "INVALID_RECS_LIMIT",
 		})
 		return
 	}
@@ -175,13 +186,17 @@ func (h *AnalysisHandler) GetAnalysisByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid ings_limit",
+			Code:    "INVALID_INGS_LIMIT",
 		})
 		return
 	}
 
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
@@ -189,9 +204,7 @@ func (h *AnalysisHandler) GetAnalysisByID(c *gin.Context) {
 
 	analysis, err := h.analysisService.GetByID(c.Request.Context(), userID, id, recsLimit, ingsLimit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -208,6 +221,8 @@ func (h *AnalysisHandler) GetAnalysisByID(c *gin.Context) {
 // @Success      204
 // @Failure      400  {object}  dto.ErrorResponse
 // @Failure      401  {object}  dto.ErrorResponse
+// @Failure      403  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /analyses/{id} [delete]
 func (h *AnalysisHandler) DeleteAnalysis(c *gin.Context) {
@@ -217,22 +232,24 @@ func (h *AnalysisHandler) DeleteAnalysis(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "invalid id",
+			Code:    "INVALID_ID",
 		})
 		return
 	}
 
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
 	userID := userIDRaw.(uuid.UUID)
 
 	if err := h.analysisService.Delete(c.Request.Context(), userID, id); err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
