@@ -30,12 +30,16 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 // @Security     BearerAuth
 // @Success      200  {object}  dto.UserResponse
 // @Failure      401  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /users/me [get]
 func (h *UserHandler) GetMe(c *gin.Context) {
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
@@ -43,9 +47,7 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 
 	user, err := h.userService.GetByID(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -61,7 +63,9 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        body body      dto.UserRequest true "User Request"
 // @Success      200  {object}  dto.UserResponse
+// @Failure      400  {object}  dto.ErrorResponse
 // @Failure      401  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /users/me [patch]
 func (h *UserHandler) UpdateMe(c *gin.Context) {
@@ -69,14 +73,18 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
-			Message: "invalid request body: " + err.Error(),
+			Message: "invalid request body",
+			Code:    "INVALID_REQUEST",
 		})
 		return
 	}
 
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
@@ -84,9 +92,7 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 
 	user, err := h.userService.Update(c.Request.Context(), userID, req.Email, req.Name, req.BirthDate, req.Gender)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -102,6 +108,7 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        body body      dto.UserPasswordRequest true "User Password Request"
 // @Success      204
+// @Failure      400  {object}  dto.ErrorResponse
 // @Failure      401  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /users/me/password [patch]
@@ -110,14 +117,18 @@ func (h *UserHandler) UpdateMyPassword(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
-			Message: "invalid request body: " + err.Error(),
+			Message: "invalid request body",
+			Code:    "INVALID_REQUEST",
 		})
 		return
 	}
 
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
@@ -125,9 +136,7 @@ func (h *UserHandler) UpdateMyPassword(c *gin.Context) {
 
 	err := h.userService.UpdatePassword(c.Request.Context(), userID, req.CurrentPassword, req.NewPassword)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
@@ -143,12 +152,16 @@ func (h *UserHandler) UpdateMyPassword(c *gin.Context) {
 // @Security     BearerAuth
 // @Success      204
 // @Failure      401  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /users/me [delete]
 func (h *UserHandler) DeleteMe(c *gin.Context) {
 	userIDRaw, exists := c.Get(string(middleware.UserIDKey))
 	if !exists {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Message: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "unauthorized",
+			Code:    "UNAUTHORIZED",
+		})
 		return
 	}
 
@@ -156,9 +169,7 @@ func (h *UserHandler) DeleteMe(c *gin.Context) {
 
 	err := h.userService.Delete(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Message: err.Error(),
-		})
+		HandleError(c, err)
 		return
 	}
 
