@@ -55,7 +55,11 @@ func New(cfg *config.Config) (*Client, error) {
 
 func (c *Client) Health(ctx context.Context) error {
 	_, err := c.client.ListBuckets(ctx)
-	return err
+	if err != nil {
+		return ErrStorageUnavailable
+	}
+
+	return nil
 }
 
 func (c *Client) Upload(
