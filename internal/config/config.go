@@ -7,9 +7,14 @@ import (
 )
 
 type Config struct {
+	App      AppConfig
 	Postgres PostgresConfig
 	Minio    MinioConfig
 	JWT      JWTConfig
+}
+
+type AppConfig struct {
+	Env string
 }
 
 type PostgresConfig struct {
@@ -44,6 +49,9 @@ type JWTConfig struct {
 
 func Load() *Config {
 	return &Config{
+		App: AppConfig{
+			Env: getEnv("APP_ENV"),
+		},
 		Postgres: PostgresConfig{
 			Host:     getEnv("POSTGRES_HOST"),
 			Port:     getEnv("POSTGRES_PORT"),
