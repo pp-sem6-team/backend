@@ -4,13 +4,17 @@ import (
 	"github.com/gin-gonic/gin"
 
 	_ "github.com/pp-sem6-team/backend/docs"
+	"github.com/pp-sem6-team/backend/internal/middleware"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func setupRouter(deps *Dependencies) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+
+	r.Use(middleware.Recovery())
+	r.Use(middleware.Logger())
 
 	r.GET("/health", deps.HealthHandler.Health)
 	r.GET("/health/db", deps.HealthHandler.DBHealth)

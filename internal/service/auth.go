@@ -7,9 +7,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/pp-sem6-team/backend/internal/db/model"
 	"github.com/pp-sem6-team/backend/internal/domain"
+	"github.com/pp-sem6-team/backend/internal/logger"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"github.com/pp-sem6-team/backend/internal/security"
 	"github.com/pp-sem6-team/backend/internal/security/jwt"
+	"go.uber.org/zap"
 )
 
 type AuthService struct {
@@ -54,25 +56,52 @@ func (s *AuthService) Register(
 		return "", "", err
 	}
 
+	logger.Log.Info(
+		"user registered",
+		zap.String("user_id", newUser.ID.String()),
+	)
+
 	return s.generateTokens(ctx, newUser.ID)
 }
 
 func (s *AuthService) Login(ctx context.Context, email, password string) (string, string, error) {
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
-		return "", "", err
+		logger.Log.Warn(
+			"invalid login credentials",
+			zap.String("email", email),
+		)
+		return "", "", domain.ErrInvalidCreds
 	}
 
 	if err := security.CheckPassword(password, user.PasswordHash); err != nil {
+		logger.Log.Warn(
+			"invalid login credentials",
+			zap.String("email", email),
+		)
 		return "", "", domain.ErrInvalidCreds
 	}
+
+	logger.Log.Info(
+		"user logged in",
+		zap.String("user_id", user.ID.String()),
+	)
 
 	return s.generateTokens(ctx, user.ID)
 }
 
 func (s *AuthService) Logout(ctx context.Context, userID uuid.UUID, refreshToken string) error {
 	hash := security.HashToken(refreshToken)
-	return s.refreshTokenRepo.DeleteByUserIDAndToken(ctx, userID, hash)
+	if err := s.refreshTokenRepo.DeleteByUserIDAndToken(ctx, userID, hash); err != nil {
+		return err
+	}
+
+	logger.Log.Info(
+		"user logged out",
+		zap.String("user_id", userID.String()),
+	)
+
+	return nil
 }
 
 func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (string, string, error) {
@@ -85,12 +114,21 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (string,
 
 	if time.Now().After(stored.ExpiresAt) {
 		_ = s.refreshTokenRepo.Delete(ctx, stored.ID)
+		logger.Log.Warn(
+			"refresh token expired",
+			zap.String("user_id", stored.UserID.String()),
+		)
 		return "", "", domain.ErrTokenExpired
 	}
 
 	if err := s.refreshTokenRepo.Delete(ctx, stored.ID); err != nil {
 		return "", "", err
 	}
+
+	logger.Log.Info(
+		"tokens refreshed",
+		zap.String("user_id", stored.UserID.String()),
+	)
 
 	return s.generateTokens(ctx, stored.UserID)
 }
