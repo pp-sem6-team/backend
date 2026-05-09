@@ -6,9 +6,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pp-sem6-team/backend/internal/domain"
+	"github.com/pp-sem6-team/backend/internal/logger"
 	"github.com/pp-sem6-team/backend/internal/repository"
 	"github.com/pp-sem6-team/backend/internal/security"
 	"github.com/pp-sem6-team/backend/internal/service/mapper"
+	"go.uber.org/zap"
 )
 
 type UserService struct {
@@ -61,6 +63,11 @@ func (s *UserService) Update(
 		return nil, err
 	}
 
+	logger.Log.Info(
+		"user updated",
+		zap.String("user_id", userID.String()),
+	)
+
 	return mapper.ToUserDomain(user), nil
 }
 
@@ -71,6 +78,10 @@ func (s *UserService) UpdatePassword(ctx context.Context, userID uuid.UUID, curr
 	}
 
 	if err := security.CheckPassword(currentPassword, user.PasswordHash); err != nil {
+		logger.Log.Warn(
+			"invalid current password",
+			zap.String("user_id", userID.String()),
+		)
 		return domain.ErrInvalidCreds
 	}
 
@@ -79,9 +90,27 @@ func (s *UserService) UpdatePassword(ctx context.Context, userID uuid.UUID, curr
 		return err
 	}
 
-	return s.repo.UpdatePassword(ctx, userID, string(hash))
+	if err := s.repo.UpdatePassword(ctx, userID, string(hash)); err != nil {
+		return err
+	}
+
+	logger.Log.Info(
+		"user password updated",
+		zap.String("user_id", userID.String()),
+	)
+
+	return nil
 }
 
 func (s *UserService) Delete(ctx context.Context, userID uuid.UUID) error {
-	return s.repo.Delete(ctx, userID)
+	if err := s.repo.Delete(ctx, userID); err != nil {
+		return err
+	}
+
+	logger.Log.Info(
+		"user deleted",
+		zap.String("user_id", userID.String()),
+	)
+
+	return nil
 }

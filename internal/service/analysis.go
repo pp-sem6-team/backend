@@ -13,7 +13,9 @@ import (
 	"github.com/pp-sem6-team/backend/internal/domain"
 	"github.com/pp-sem6-team/backend/internal/integration/ml"
 	"github.com/pp-sem6-team/backend/internal/integration/storage"
+	"github.com/pp-sem6-team/backend/internal/logger"
 	"github.com/pp-sem6-team/backend/internal/repository"
+	"go.uber.org/zap"
 	"gorm.io/datatypes"
 )
 
@@ -98,24 +100,65 @@ func (s *AnalysisService) Create(
 		return nil, err
 	}
 
-	go func(parentCtx context.Context, analysisID, photoID uuid.UUID, objectKey string) {
-		ctx, cancel := context.WithTimeout(parentCtx, 30*time.Second)
+	logger.Log.Info(
+		"analysis created",
+		zap.String("analysis_id", analysis.ID.String()),
+		zap.String("user_id", userID.String()),
+	)
+
+	go func(analysisID, photoID uuid.UUID, objectKey string) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
+
+		logger.Log.Info(
+			"analysis started",
+			zap.String("analysis_id", analysisID.String()),
+		)
 
 		result, err := s.mlClient.Analyze(ctx, objectKey)
 		if err != nil || result == nil {
-			_ = s.analysisRepo.UpdateStatus(ctx, analysisID, domain.Failed)
+			if err := s.analysisRepo.UpdateStatus(ctx, analysisID, domain.Failed); err != nil {
+				logger.Log.Error(
+					"failed to update analysis status",
+					zap.String("analysis_id", analysisID.String()),
+					zap.Error(err),
+				)
+			}
+
+			fields := []zap.Field{
+				zap.String("analysis_id", analysisID.String()),
+			}
+
+			if err != nil {
+				fields = append(fields, zap.Error(err))
+			}
+
+			logger.Log.Error("analysis failed", fields...)
+
 			return
 		}
 
-		_ = s.analysisRepo.Update(ctx, &model.Analysis{
+		if err := s.analysisRepo.Update(ctx, &model.Analysis{
 			ID:           analysisID,
 			PhotoID:      photoID,
 			Status:       domain.Completed,
 			SkinType:     &result.SkinType,
 			AnalysisData: result.Data,
-		})
-	}(ctx, analysis.ID, photo.ID, objectKey)
+		}); err != nil {
+			logger.Log.Error(
+				"failed to update analysis",
+				zap.String("analysis_id", analysisID.String()),
+				zap.Error(err),
+			)
+			return
+		}
+
+		logger.Log.Info(
+			"analysis completed",
+			zap.String("analysis_id", analysisID.String()),
+			zap.String("skin_type", string(result.SkinType)),
+		)
+	}(analysis.ID, photo.ID, objectKey)
 
 	url, err := s.storage.GetPresignedURL(ctx, objectKey, s.presignTTL)
 	if err != nil {
@@ -190,6 +233,11 @@ func (s *AnalysisService) GetByID(
 	}
 
 	if photo.UserID != userID {
+		logger.Log.Warn(
+			"forbidden analysis access",
+			zap.String("analysis_id", analysisID.String()),
+			zap.String("user_id", userID.String()),
+		)
 		return nil, domain.ErrForbidden
 	}
 
@@ -267,6 +315,11 @@ func (s *AnalysisService) Delete(
 	}
 
 	if photo.UserID != userID {
+		logger.Log.Warn(
+			"forbidden analysis delete",
+			zap.String("analysis_id", analysisID.String()),
+			zap.String("user_id", userID.String()),
+		)
 		return domain.ErrForbidden
 	}
 
@@ -281,6 +334,12 @@ func (s *AnalysisService) Delete(
 	if err := s.photoRepo.Delete(ctx, photo.ID); err != nil {
 		return err
 	}
+
+	logger.Log.Info(
+		"analysis deleted",
+		zap.String("analysis_id", analysisID.String()),
+		zap.String("user_id", userID.String()),
+	)
 
 	return nil
 }
