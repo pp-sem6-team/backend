@@ -43,6 +43,23 @@ Backend будет доступен на http://localhost:8080
     migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/skin_service?sslmode=disable" up
 
 
+## Seed-данные
+
+После применения миграций необходимо заполнить базу начальными данными.
+
+В проекте используется seed-скрипт с рекомендациями по уходу и активными компонентами.
+
+Запуск seed-скрипта в консоли PostgreSQL:
+
+    psql -U postgres -d skin_service -f scripts/seeds.sql
+
+
+Запуск seed-скрипта для Docker-контейнера PostgreSQL:
+
+    docker cp scripts/seeds.sql skin-service-postgres:/tmp/seeds.sql
+    docker exec -it skin-service-postgres psql -U postgres -d skin_service -f /tmp/seeds.sql
+
+
 ## Swagger UI
 
 Swagger доступен по адресу http://localhost:8080/swagger/index.html
