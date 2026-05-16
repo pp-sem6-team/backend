@@ -11,6 +11,7 @@ type Config struct {
 	Postgres PostgresConfig
 	Minio    MinioConfig
 	JWT      JWTConfig
+	ML       MLConfig
 }
 
 type AppConfig struct {
@@ -47,6 +48,12 @@ type JWTConfig struct {
 	RefreshTokenTTL time.Duration
 }
 
+type MLConfig struct {
+	BaseURL string
+	APIKey  string
+	Timeout time.Duration
+}
+
 func Load() *Config {
 	return &Config{
 		App: AppConfig{
@@ -78,6 +85,11 @@ func Load() *Config {
 			Secret:          getEnv("JWT_SECRET"),
 			AccessTokenTTL:  time.Duration(getEnvInt("JWT_ACCESS_TTL_SECONDS")) * time.Second,
 			RefreshTokenTTL: time.Duration(getEnvInt("JWT_REFRESH_TTL_DAYS")) * 24 * time.Hour,
+		},
+		ML: MLConfig{
+			BaseURL: getEnv("ML_SERVICE_URL"),
+			APIKey:  getEnv("ML_API_KEY"),
+			Timeout: time.Duration(getEnvInt("ML_TIMEOUT_SECONDS")) * time.Second,
 		},
 	}
 }
