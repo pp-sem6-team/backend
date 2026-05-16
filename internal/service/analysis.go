@@ -79,12 +79,14 @@ func (s *AnalysisService) Create(
 
 	objectKey := fmt.Sprintf("users/%s/photos/%s%s", userID, uuid.New().String(), ext)
 
+	mimeType := detectMimeType(ext)
+
 	err = s.storage.Upload(
 		ctx,
 		objectKey,
 		bytes.NewReader(fileBytes),
 		size,
-		"image/jpeg",
+		mimeType,
 	)
 	if err != nil {
 		return nil, err
@@ -353,4 +355,15 @@ func (s *AnalysisService) Delete(
 	)
 
 	return nil
+}
+
+func detectMimeType(ext string) string {
+	switch ext {
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	default:
+		return "application/octet-stream"
+	}
 }
