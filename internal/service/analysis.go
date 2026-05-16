@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -65,16 +66,26 @@ func (s *AnalysisService) Create(
 		return nil, domain.ErrInvalidFileType
 	}
 
+	fileBytes, err := io.ReadAll(content)
+	if err != nil {
+		logger.Log.Error(
+			"failed to read file content",
+			zap.Error(err),
+			zap.String("user_id", userID.String()),
+		)
+
+		return nil, domain.ErrReadFileContent
+	}
+
 	objectKey := fmt.Sprintf("users/%s/photos/%s%s", userID, uuid.New().String(), ext)
 
-	err := s.storage.Upload(
+	err = s.storage.Upload(
 		ctx,
 		objectKey,
-		content,
+		bytes.NewReader(fileBytes),
 		size,
 		"image/jpeg",
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +117,7 @@ func (s *AnalysisService) Create(
 		zap.String("user_id", userID.String()),
 	)
 
-	go func(analysisID, photoID uuid.UUID, objectKey string) {
+	go func(analysisID, photoID uuid.UUID, fileName string, fileBytes []byte) {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
@@ -115,7 +126,7 @@ func (s *AnalysisService) Create(
 			zap.String("analysis_id", analysisID.String()),
 		)
 
-		result, err := s.mlClient.Analyze(ctx, objectKey)
+		result, err := s.mlClient.Analyze(ctx, fileName, fileBytes)
 		if err != nil || result == nil {
 			if err := s.analysisRepo.UpdateStatus(ctx, analysisID, domain.Failed); err != nil {
 				logger.Log.Error(
@@ -158,7 +169,7 @@ func (s *AnalysisService) Create(
 			zap.String("analysis_id", analysisID.String()),
 			zap.String("skin_type", string(result.SkinType)),
 		)
-	}(analysis.ID, photo.ID, objectKey)
+	}(analysis.ID, photo.ID, fileName, fileBytes)
 
 	url, err := s.storage.GetPresignedURL(ctx, objectKey, s.presignTTL)
 	if err != nil {

@@ -10,23 +10,34 @@ import (
 
 type MockClient struct{}
 
-func NewMockClient() *MockClient {
+func NewMockClient() Client {
 	return &MockClient{}
 }
 
-func (c *MockClient) Analyze(ctx context.Context, objectKey string) (*Result, error) {
-	stats := map[string]any{
-		"accuracy":        0.82,
-		"processing_time": 1.37,
+func (c *MockClient) Analyze(
+	ctx context.Context,
+	fileName string,
+	data []byte,
+) (*Result, error) {
+	mockResponse := map[string]any{
+		"model_version": "mock-1.0.0",
+		"confidence":    0.82,
+		"probabilities": map[string]float64{
+			"combination": 0.05,
+			"dry":         0.03,
+			"normal":      0.10,
+			"oily":        0.82,
+		},
+		"warnings": []string{},
 	}
 
-	bytes, err := json.Marshal(stats)
+	rawJSON, err := json.Marshal(mockResponse)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Result{
 		SkinType: domain.Oily,
-		Data:     datatypes.JSON(bytes),
+		Data:     datatypes.JSON(rawJSON),
 	}, nil
 }
