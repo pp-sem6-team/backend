@@ -7,4 +7,5 @@ var (
 	ErrTokenExpired    = errors.New("token expired")
 	ErrForbidden       = errors.New("forbidden")
 	ErrInvalidFileType = errors.New("invalid file type: only jpg, jpeg, png are allowed")
+	ErrReadFileContent = errors.New("failed to read file content")
 )

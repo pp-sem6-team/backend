@@ -64,7 +64,7 @@ func initDependencies(
 	)
 
 	return &Dependencies{
-		HealthHandler:   handler.NewHealthHandler(database, storage),
+		HealthHandler:   handler.NewHealthHandler(database, storage, mlClient),
 		AuthHandler:     handler.NewAuthHandler(authService),
 		UserHandler:     handler.NewUserHandler(userService),
 		AnalysisHandler: handler.NewAnalysisHandler(analysisService),

@@ -5,5 +5,6 @@ import (
 )
 
 type Client interface {
-	Analyze(ctx context.Context, objectKey string) (*Result, error)
+	Health(ctx context.Context) error
+	Analyze(ctx context.Context, fileName string, data []byte) (*Result, error)
 }

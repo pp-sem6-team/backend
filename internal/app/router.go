@@ -19,6 +19,7 @@ func setupRouter(deps *Dependencies) *gin.Engine {
 	r.GET("/health", deps.HealthHandler.Health)
 	r.GET("/health/db", deps.HealthHandler.DBHealth)
 	r.GET("/health/storage", deps.HealthHandler.StorageHealth)
+	r.GET("/health/ml", deps.HealthHandler.MLHealth)
 
 	r.POST("/auth/register", deps.AuthHandler.Register)
 	r.POST("/auth/login", deps.AuthHandler.Login)
