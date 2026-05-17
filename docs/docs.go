@@ -538,6 +538,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/health/ml": {
+            "get": {
+                "description": "Returns status of ML service availability",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Check ML service health",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/health/storage": {
             "get": {
                 "description": "Returns OK if storage is running",

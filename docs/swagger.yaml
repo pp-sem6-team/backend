@@ -567,6 +567,23 @@ paths:
       summary: Check db health
       tags:
       - health
+  /health/ml:
+    get:
+      description: Returns status of ML service availability
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+      summary: Check ML service health
+      tags:
+      - health
   /health/storage:
     get:
       description: Returns OK if storage is running

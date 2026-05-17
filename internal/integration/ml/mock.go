@@ -14,6 +14,10 @@ func NewMockClient() Client {
 	return &MockClient{}
 }
 
+func (c *MockClient) Health(ctx context.Context) error {
+	return nil
+}
+
 func (c *MockClient) Analyze(
 	ctx context.Context,
 	fileName string,
