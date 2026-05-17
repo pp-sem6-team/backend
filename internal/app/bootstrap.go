@@ -32,7 +32,11 @@ func initInfrastructure(cfg *config.Config) (*gorm.DB, *minio.Client, ml.Client,
 		return nil, nil, nil, err
 	}
 
-	mlClient := ml.NewMockClient()
+	mlClient := ml.NewHTTPClient(
+		cfg.ML.BaseURL,
+		cfg.ML.APIKey,
+		cfg.ML.Timeout,
+	)
 
 	return database, storage, mlClient, nil
 }
